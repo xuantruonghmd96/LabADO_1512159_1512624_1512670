@@ -87,8 +87,6 @@ namespace LabADO_1512159_1512624_1512670
             }
             if (chbxTuoi.Checked)
             {
-                if (sq != "")
-                    sq += " and ";
                 string sqTuoi = "";
                 if (tbxTuoiMin.Text != "")
                     sqTuoi = " YEAR(GETDATE()) - namSinh >= " + tbxTuoiMin.Text;
@@ -98,6 +96,8 @@ namespace LabADO_1512159_1512624_1512670
                         sqTuoi += " and ";
                     sqTuoi += " YEAR(GETDATE()) - namSinh <= " + tbxTuoiMax.Text;
                 }
+                if (sq != "" && sqTuoi != "")
+                    sq += " and ";
                 sq += sqTuoi;
             }
 
