@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Data.SqlClient;
 
 namespace LabADO_1512159_1512624_1512670
 {
@@ -72,9 +73,96 @@ namespace LabADO_1512159_1512624_1512670
             MessageBox.Show("Them sinh vien");
         }
 
+        string GetQuery()
+        {
+            string sQuery = " select maSV as 'Mã sinh viên', tenSV as 'Tên sinh viên', namSinh as 'Năm sinh', hocLop as 'Học lớp', diemTB as 'Điểm TB' from SinhVien ";
+            string sq = "";
+            if (chbxLop.Checked)
+                sq = " hocLop = " + cbxLop.SelectedValue.ToString();
+            if (chbxTen.Checked)
+            {
+                if (sq != "")
+                    sq += " and ";
+                sq += " tenSV like N'%" + tbxTen.Text + "%' ";
+            }
+            if (chbxTuoi.Checked)
+            {
+                if (sq != "")
+                    sq += " and ";
+                string sqTuoi = "";
+                if (tbxTuoiMin.Text != "")
+                    sqTuoi = " YEAR(GETDATE()) - namSinh >= " + tbxTuoiMin.Text;
+                if (tbxTuoiMax.Text != "")
+                {
+                    if (sqTuoi != "")
+                        sqTuoi += " and ";
+                    sqTuoi += " YEAR(GETDATE()) - namSinh <= " + tbxTuoiMax.Text;
+                }
+                sq += sqTuoi;
+            }
+
+            if (sq != "")
+                sQuery += " where " + sq;
+            return sQuery;
+        }
+
         private void btnLoc_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Loc dataGridView DanhSachSinhVien");
+            //MessageBox.Show("Loc dataGridView DanhSachSinhVien");
+            string sConnect = @"Data Source=TRUONG-DESKTOP\SQLEXPRESS;Initial Catalog=LabADO_1512159_1512624_1512670;Integrated Security=True";
+            SqlConnection sqlConnect = new SqlConnection();
+            sqlConnect.ConnectionString = sConnect;
+            sqlConnect.Open();
+
+            string squery = GetQuery();
+
+            DataSet dataSet = new DataSet();
+            SqlDataAdapter sqlDAdap = new SqlDataAdapter(squery, sqlConnect);
+            sqlDAdap.Fill(dataSet);
+
+            if (dataSet.Tables.Count > 0)
+                dgvwSV.DataSource = dataSet.Tables[0];
+
+            sqlConnect.Close();
+        }
+
+        void LoadData()
+        {
+            //B0: Lay tham so
+            string sConnect = @"Data Source=TRUONG-DESKTOP\SQLEXPRESS;Initial Catalog=LabADO_1512159_1512624_1512670;Integrated Security=True";
+
+            //B1: Tao ket noi
+            SqlConnection sqlConnect = new SqlConnection();
+            sqlConnect.ConnectionString = sConnect;
+            sqlConnect.Open();
+
+            //B2: Viet sql
+            string squeryLop = "Select idLop as 'Mã lớp', tenLop as 'Tên lớp' from LopHoc";
+
+            //B3: chay sql
+            //Neu select: dung SQLDataAdapter: luu ket qua, chua du lieu Dataset
+            //tuy nhien neu 1 dong 1 cot: dung SQLCommand/ExecuteScalar() -> Chay SQL tra ve 1 gia tri
+            //Neu insert/update: dung SQLCommand, goi ExecuteNoneQuery()
+            DataSet dataSet = new DataSet();
+            SqlDataAdapter sqlDAdap = new SqlDataAdapter(squeryLop, sqlConnect);
+            sqlDAdap.Fill(dataSet);
+
+            //B4: xu ly du lieu
+            if (dataSet.Tables.Count > 0)
+            {
+                cbxLop.DataSource = dataSet.Tables[0];
+                cbxLop.DisplayMember = "Tên lớp";
+                cbxLop.ValueMember = "Mã lớp";
+                dgvwLop.DataSource = dataSet.Tables[0];
+            }
+
+            //B5: dong ket noi
+            sqlConnect.Close();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            LoadData();
         }
     }
 }
